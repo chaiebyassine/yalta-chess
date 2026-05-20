@@ -233,13 +233,40 @@ inline void pawnStep(const Plateau& plateau,
             moves.push_back(pos);
     };
 
-    // Les 2 diagonales : (xMove, ±1) ou (±1, yMove)
-    if (xMove != 0) {
-        tryCapture(xMove,  1);
-        tryCapture(xMove, -1);
-    } else {
-        tryCapture( 1, yMove);
-        tryCapture(-1, yMove);
+    // Capture directe vers une case (x,y) connue (jonctions de bordure)
+    auto tryCaptureDirect = [&](int xC, int yC) {
+        if (isOutOfBoard2D(xC, yC) || isSquareInvalid2D(xC, yC)) return;
+        Position pos = positionFrom2D(xC, yC);
+        if (!pos.estValide() || !plateau.caseExiste(pos)) return;
+        const Case* c = plateau.obtenirCase(pos);
+        if (c && c->estOccupee() && c->getPiece()->getCouleur() != myColor)
+            moves.push_back(pos);
+    };
+
+    // Cas spéciaux : cellules de jonction au centre du plateau.
+    // adjustCoordinates2D ne gère pas correctement les diagonales à ces 6 points ;
+    // on utilise directement les destinations topologiques issues de la grille Yalta.
+    bool junction = false;
+    if (myColor == Couleur::BLANC) {
+        if      (xStart == 3 && yStart == 3) { tryCaptureDirect(4,8); tryCaptureDirect(8,4); junction = true; }
+        else if (xStart == 3 && yStart == 4) { tryCaptureDirect(8,8); tryCaptureDirect(4,3); junction = true; }
+    } else if (myColor == Couleur::ROUGE) {
+        if      (xStart == 4 && yStart == 3) { tryCaptureDirect(8,8); tryCaptureDirect(3,4); junction = true; }
+        else if (xStart == 4 && yStart == 8) { tryCaptureDirect(8,4); tryCaptureDirect(3,3); junction = true; }
+    } else { // NOIR
+        if      (xStart == 8 && yStart == 8) { tryCaptureDirect(3,4); tryCaptureDirect(4,3); junction = true; }
+        else if (xStart == 8 && yStart == 4) { tryCaptureDirect(4,8); tryCaptureDirect(3,3); junction = true; }
+    }
+
+    // Captures diagonales normales (si pas de jonction)
+    if (!junction) {
+        if (xMove != 0) {
+            tryCapture(xMove,  1);
+            tryCapture(xMove, -1);
+        } else {
+            tryCapture( 1, yMove);
+            tryCapture(-1, yMove);
+        }
     }
 
     // Avance 1 case

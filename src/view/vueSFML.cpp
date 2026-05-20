@@ -12,7 +12,7 @@ static const float PI_F = 3.14159265359f;
 // ── Constructeur ──────────────────────────────────────────────
 VueSFML::VueSFML()
     : jeu(), controleur(&jeu),
-      window(sf::VideoMode({WIN_W, WIN_H}),
+      window(sf::VideoMode({PHYS_W, PHYS_H}),
              "Yalta Chess - 3 joueurs",
              sf::Style::Titlebar | sf::Style::Close),
       textGame(font, sf::String(), 22u),
@@ -22,6 +22,10 @@ VueSFML::VueSFML()
     ecranActuel = Ecran::MENU;
     nbJoueurIA  = 0;
     window.setFramerateLimit(60);
+
+    // Vue logique : scale 1200×1070 → PHYS_W×PHYS_H
+    sf::View view(sf::FloatRect({0.f, 0.f}, {float(WIN_W), float(WIN_H)}));
+    window.setView(view);
 
     if (!font.openFromFile("C:\\Windows\\Fonts\\arial.ttf"))
         (void)font.openFromFile("C:\\Windows\\Fonts\\consola.ttf");
@@ -72,9 +76,7 @@ void VueSFML::demarrerPartie(int nbIA) {
     controleur = ControleurJeu(&jeu);
 
     // Créer les joueurs selon le nombre d'IA demandé
-    // Ordre : BLANC (Alice), ROUGE (Bob), NOIR (Carol)
-    // Si nbIA == 1 : Carol est IA
-    // Si nbIA == 2 : Bob et Carol sont IA
+    
     const std::string noms[3]   = {"Alice", "Bob", "Carol"};
     const Couleur     cols[3]   = {Couleur::BLANC, Couleur::ROUGE, Couleur::NOIR};
 
@@ -125,6 +127,7 @@ std::string VueSFML::getCleTexture(const Piece* p) const {
 
 // ── buildBoard — dessine hexagone + 6 matrices × 16 losanges + labels ──
 void VueSFML::buildBoard() {
+    // Création de l’hexagone principal
     std::vector<float> side_lengths = {450, 460, 460, 450, 460, 460};
     std::vector<sf::Vector2f> points;
     float angle = 0;
@@ -135,17 +138,18 @@ void VueSFML::buildBoard() {
         points.push_back(points.back() +
             sf::Vector2f(std::cos(angle), std::sin(angle)) * side_lengths[i]);
     }
+    //dessin de l'hexagone principal
     hexagon.setPointCount(6);
     for (size_t i = 0; i < 6; i++) hexagon.setPoint(i, points[i]);
     hexagon.setFillColor(sf::Color::Transparent);
     hexagon.setOutlineColor(sf::Color::White);
     hexagon.setOutlineThickness(2.f);
-
+//Calcul du centre du plateau
     sf::Vector2f center(0, 0);
     for (const auto& p : points) center += p;
     center /= float(points.size());
     boardCenter = center;
-
+//Création d’un deuxième hexagone plus grand pour les bordures et les lignes de séparation des matrices
     std::vector<sf::Vector2f> points2;
     std::vector<float> side_lengths2 = {500, 510, 510, 500, 510, 510};
     points2.push_back(origin + sf::Vector2f(side_lengths2[0], 0));
@@ -165,7 +169,7 @@ void VueSFML::buildBoard() {
     hexagon2.setFillColor(sf::Color::White);
     hexagon2.setOutlineColor(sf::Color::Black);
     hexagon2.setOutlineThickness(7.f);
-
+//Calcul des milieux des côtés
     std::vector<sf::Vector2f> milieux = {
         milieu(points[4], points[3]),
         milieu(points[3], points[2]),
@@ -176,6 +180,7 @@ void VueSFML::buildBoard() {
     };
 
     lines.clear();
+    // dessin de 6 matrices
     for (const auto& m : milieux)
         lines.push_back(createLine(center, m, sf::Color::Red));
 
@@ -837,9 +842,11 @@ void VueSFML::run() {
             }
             if (const auto* mb = ev->getIf<sf::Event::MouseButtonPressed>()) {
                 if (mb->button == sf::Mouse::Button::Left) {
-                    if      (ecranActuel == Ecran::MENU)  handleMenuClick(mb->position.x, mb->position.y);
-                    else if (ecranActuel == Ecran::JEU)   handleGameClick(mb->position.x, mb->position.y);
-                    else if (ecranActuel == Ecran::PAUSE) handlePauseClick(mb->position.x, mb->position.y);
+                    sf::Vector2f wp = window.mapPixelToCoords(mb->position);
+                    int mx = (int)wp.x, my = (int)wp.y;
+                    if      (ecranActuel == Ecran::MENU)  handleMenuClick(mx, my);
+                    else if (ecranActuel == Ecran::JEU)   handleGameClick(mx, my);
+                    else if (ecranActuel == Ecran::PAUSE) handlePauseClick(mx, my);
                 }
             }
         }

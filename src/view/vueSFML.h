@@ -26,9 +26,11 @@ class VueSFML : public Observateur {
 public:
     enum class Ecran { MENU, JEU, PAUSE };
 
-    static constexpr unsigned WIN_W  = 1200u;
+    static constexpr unsigned WIN_W  = 1200u;  // espace logique (coordonnées du plateau)
     static constexpr unsigned WIN_H  = 1070u;
-    static constexpr unsigned INFO_H = 70u;
+    static constexpr unsigned PHYS_W = 1200u;  // taille physique de la fenêtre
+    static constexpr unsigned PHYS_H = 1070u;
+    static constexpr unsigned INFO_H =  70u;
 
     VueSFML();
     void run();
