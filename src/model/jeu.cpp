@@ -51,6 +51,9 @@ bool Jeu::deplacerPiece(const Position& depart, const Position& arrivee) {
     for (const auto& p : mouvements) if (p == arrivee) { ok = true; break; }
     if (!ok) return false;
 
+    // Anti-échec : rejeter tout coup qui laisserait le roi du joueur courant en échec
+    if (mouvementLaisseEnEchec(piece, arrivee)) return false;
+
     if (caseArrivee->estOccupee()) {
         Piece* cap = caseArrivee->getPiece();
         if (cap->getCouleur() == piece->getCouleur()) return false;
@@ -89,6 +92,13 @@ void Jeu::verifierEtatApresMove() {
         } else if (estEnEchec(j)) {
             etatPartie = EtatPartie::ECHEC;
         }
+    }
+
+    // Vérifier le pat (nulle) pour le joueur courant (le seul qui va jouer)
+    Joueur* courant = getJoueurCourant();
+    if (courant && !courant->getEstElimine() && etatPartie == EtatPartie::EN_COURS) {
+        if (estPat(courant))
+            etatPartie = EtatPartie::NULLE;
     }
 
     int nbActifs = 0;
@@ -187,32 +197,51 @@ bool Jeu::estEnEchec(Joueur* joueur) {
 }
 
 bool Jeu::estMat(Joueur* joueur) {
-    if (!estEnEchec(joueur)) return false;
-    for (Piece* piece : joueur->getPieces()) {
-        for (const Position& arrivee : piece->mouvementsPossibles(plateau)) {
-            Position depart = piece->getPosition();
-            Case* cd = plateau.obtenirCase(depart);
-            Case* ca = plateau.obtenirCase(arrivee);
-            if (!cd || !ca) continue;
+    return estEnEchec(joueur) && !aDesMouvementsLegaux(joueur);
+}
 
-            Piece* cap = ca->getPiece();
-            bool occupied = ca->estOccupee();
+// Simule un déplacement et retourne vrai si le roi reste en échec après ce coup
+bool Jeu::mouvementLaisseEnEchec(Piece* piece, const Position& arrivee) {
+    Position depart = piece->getPosition();
+    Case* cd = plateau.obtenirCase(depart);
+    Case* ca = plateau.obtenirCase(arrivee);
+    if (!cd || !ca) return true;
 
-            cd->vider();
-            ca->placerPiece(piece);
-            piece->setPosition(arrivee);
+    Piece* cap       = ca->getPiece();
+    bool   occupied  = ca->estOccupee();
+    Joueur* capJoueur = occupied ? cap->getJoueur() : nullptr;
 
-            bool encoreEnEchec = estEnEchec(joueur);
+    // Simuler
+    cd->vider();
+    ca->placerPiece(piece);
+    piece->setPosition(arrivee);
+    if (occupied) capJoueur->retirerPiece(cap);
 
-            ca->vider();
-            cd->placerPiece(piece);
-            piece->setPosition(depart);
-            if (occupied) ca->placerPiece(cap);
+    bool enEchec = estEnEchec(piece->getJoueur());
 
-            if (!encoreEnEchec) return false;
-        }
+    // Annuler la simulation
+    ca->vider();
+    cd->placerPiece(piece);
+    piece->setPosition(depart);
+    if (occupied) {
+        ca->placerPiece(cap);
+        capJoueur->ajouterPiece(cap);
     }
-    return true;
+
+    return enEchec;
+}
+
+// Retourne vrai si le joueur possède au moins un coup légal
+bool Jeu::aDesMouvementsLegaux(Joueur* joueur) {
+    for (Piece* piece : joueur->getPieces())
+        for (const Position& arrivee : piece->mouvementsPossibles(plateau))
+            if (!mouvementLaisseEnEchec(piece, arrivee))
+                return true;
+    return false;
+}
+
+bool Jeu::estPat(Joueur* joueur) {
+    return !estEnEchec(joueur) && !aDesMouvementsLegaux(joueur);
 }
 
 void Jeu::reinitialiser() {

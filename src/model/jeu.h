@@ -24,6 +24,12 @@ private:
     // Met à jour etatPartie après un coup et détecte les éliminations
     void verifierEtatApresMove();
 
+    // Simule un déplacement et retourne vrai si le roi du joueur resterait en échec après ce coup
+    bool mouvementLaisseEnEchec(Piece* piece, const Position& arrivee);
+
+    // Retourne vrai si le joueur possède au moins un coup légal (ne laissant pas le roi en échec)
+    bool aDesMouvementsLegaux(Joueur* joueur);
+
 public:
     // Crée un jeu avec le plateau hexagonal (91 cases)
     Jeu();
@@ -64,6 +70,9 @@ public:
 
     // Vérifie si un joueur est mat (aucun coup possible pour sortir de l'échec)
     bool estMat(Joueur* joueur);
+
+    // Vérifie si un joueur est pat (aucun coup légal, mais pas en échec → nulle)
+    bool estPat(Joueur* joueur);
 
     // Remet la partie à zéro et place les pièces
     void demarrerPartie();

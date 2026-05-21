@@ -28,8 +28,8 @@ public:
 
     static constexpr unsigned WIN_W  = 1200u;  // espace logique (coordonnées du plateau)
     static constexpr unsigned WIN_H  = 1070u;
-    static constexpr unsigned PHYS_W = 1200u;  // taille physique de la fenêtre
-    static constexpr unsigned PHYS_H = 1070u;
+    static constexpr unsigned PHYS_W =  900u;  // taille physique de la fenêtre
+    static constexpr unsigned PHYS_H =  800u;
     static constexpr unsigned INFO_H =  70u;
 
     VueSFML();
