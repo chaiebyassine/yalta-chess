@@ -90,6 +90,7 @@ private:
     void drawPieces();
     void drawHighlights();
     void drawCoords();
+    void drawTileCoords();
     void drawInfo();
     void drawBackButton();
     void drawMenu();

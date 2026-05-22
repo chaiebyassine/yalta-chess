@@ -303,6 +303,23 @@ void VueSFML::drawCoords() {
     for (const auto& t : coordText) window.draw(t);
 }
 
+void VueSFML::drawTileCoords() {
+    for (const auto& [pos, tile] : posToTile) {
+        const sf::ConvexShape* los = getLosange(tile.first, tile.second);
+        if (!los) continue;
+        sf::Vector2f c = calculerCentreLosange(*los);
+        std::string label = std::to_string(pos.q) + "," +
+                            std::to_string(pos.r) + "," +
+                            std::to_string(pos.s);
+        sf::Text t(font, label, 9u);
+        t.setFillColor(sf::Color(30, 30, 30, 200));
+        auto b = t.getGlobalBounds();
+        t.setPosition({c.x - b.size.x * .5f - b.position.x,
+                       c.y - b.size.y * .5f - b.position.y});
+        window.draw(t);
+    }
+}
+
 void VueSFML::drawPieces() {
     for (const auto& [pos, tile] : posToTile) {
         const Case* ca = jeu.getPlateau().obtenirCase(pos);
@@ -857,7 +874,6 @@ void VueSFML::run() {
         } else {
             drawBoard();
             drawHighlights();
-            drawCoords();
             drawPieces();
             drawInfo();
             drawBackButton();
