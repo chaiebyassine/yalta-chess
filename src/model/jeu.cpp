@@ -33,8 +33,13 @@ Joueur* Jeu::getJoueurCourant() const {
 EtatPartie Jeu::getEtatPartie() const { return etatPartie; }
 
 void Jeu::changerJoueur() {
-    if (!joueurs.empty())
-        indexJoueurCourant = (indexJoueurCourant + 1) % joueurs.size();
+    if (joueurs.empty()) return;
+    int n = (int)joueurs.size();
+    for (int i = 0; i < n; ++i) {
+        indexJoueurCourant = (indexJoueurCourant + 1) % n;
+        if (!joueurs[indexJoueurCourant]->getEstElimine())
+            return;
+    }
 }
 
 bool Jeu::deplacerPiece(const Position& depart, const Position& arrivee) {
@@ -100,6 +105,10 @@ void Jeu::verifierEtatApresMove() {
         if (estPat(courant))
             etatPartie = EtatPartie::NULLE;
     }
+
+    // Si le joueur courant vient d'être éliminé, passer au suivant
+    if (!joueurs.empty() && joueurs[indexJoueurCourant]->getEstElimine())
+        changerJoueur();
 
     int nbActifs = 0;
     for (Joueur* j : joueurs)
