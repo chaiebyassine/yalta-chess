@@ -81,12 +81,7 @@ La détection actuelle des répétitions interrompt toutefois la recherche dès 
 - Gestion de la fin de partie et du pat à compléter côté interface.
 - Absence de tests automatisés et de configuration de compilation dans le dépôt examiné.
 
-## Documentation
 
-- [Documentation technique](docs/Documentation-technique.md)
-- [Guide utilisateur](docs/Guide-utilisateur.md)
-
-Documentation fondée sur la lecture de la branche main, révision 6481d4020568b650da5ba208e68f6c73f311d3d1. L’application n’a pas été compilée ni exécutée lors de cette rédaction.
 
 [Dépôt GitHub](https://github.com/chaiebyassine/projet_paa)
 
